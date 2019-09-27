@@ -125,9 +125,9 @@ def verifyBattleSituation():
     #     catchPokemon()
     return 'fight_1'
 
-def run():
-    imgClick(Bot.imageFolder + 'run.png', 1, 5)
-    sleep(2)
+# def run():
+#     imgClick(Bot.imageFolder + 'run.png', 1, 5)
+#     sleep(2)
 
 def hunt():
     while(True):
