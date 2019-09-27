@@ -29,6 +29,7 @@ class Bot:
     battles = 0
     location = None
     exiting = False
+    loops = 0
 
 def eventEmpty():
     return Bot.eventEmptyFlag
@@ -146,12 +147,14 @@ def verifySituation():
     if Bot.exiting:
         exit('verifySituation')
     if Bot.location == 'route_10':
-        if Bot.battles > 1:
+        if Bot.battles > 10:
             print('HEALING!')
             moveTo('route_10_pokecenter')
             healPokecenter()
             moveTo('route_10')
             Bot.battles = 0
+            Bot.loops = Bot.loops + 1
+            print('Looping!!')
 
 def healPokecenter():
     sleep(3)
