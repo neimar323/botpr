@@ -136,7 +136,7 @@ def verifyBattle():
 def catch():
     img = imagesearch(Bot.imageFolder + 'abra.png', precision=0.9)
     if img is None:
-        img = imagesearch(Bot.imageFolder + 'dito.png', precision=0.9)
+        img = imagesearch(Bot.imageFolder + 'ditto.png', precision=0.9)
     if img is not None:
         print('POKEMON FOUND')
         sleep(9999)
