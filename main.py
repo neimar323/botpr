@@ -121,12 +121,12 @@ def verifyBattle():
 
 
 def catch():
-    img = imagesearch(Bot.imageFolder + 'abra.png', precision=0.8)
+    img = imagesearch(Bot.imageFolder + 'abra.png', precision=0.9)
+    if img is None:
+        img = imagesearch(Bot.imageFolder + 'dito.png', precision=0.9)
     if img is not None:
-        sleep(9999999)
-    img = imagesearch(Bot.imageFolder + 'dito.png', precision=0.8)
-    if img is not None:
-        sleep(9999999)
+        print('POKEMON FOUND')
+        sleep(9999)
 
     run()
 
@@ -236,8 +236,8 @@ def timePrinter():
 #             pyautogui.press("space")
 
 def main():
-    #Bot.command = 'fight_1'
-    Bot.command = 'catch'
+    Bot.command = 'fight_1'
+    #Bot.command = 'catch'
     Bot.location ='pokemon_tower'
 
     t = []
