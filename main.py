@@ -30,7 +30,8 @@ class Bot:
     location = None
     exiting = False
     loops = 0
-    command =''
+    command = ''
+    walk = 'ad'
 
 def eventEmpty():
     return Bot.eventEmptyFlag
@@ -112,7 +113,7 @@ def verifyBattle():
     if img is not None:
         print("battleFound!")
         sleep(1)
-        img = imagesearch_numLoop(Bot.imageFolder + 'fight.png', 1, 5, precision=0.8)
+        img = imagesearch_numLoop(Bot.imageFolder + 'fight.png', 1, 2, precision=0.8)
         if img is not None:
             if 'fight' in Bot.command:
                 battle(Bot.command)
@@ -132,26 +133,23 @@ def catch():
 
 def run():
     imgClick(Bot.imageFolder + 'run.png', 1, 5)
-    sleep(2)
+    Bot.thingsOK = True
 
 def hunt():
     while(True):
-        walk("a", 1)
-        verifyBattle()
-        verifySituation()
-        #verifyDeath(locaation)d
-        walk("d", 1)
-        verifyBattle()
-        verifySituation()
-        #verifyDeath(location)
-        print("hunting!")
+        for dir in Bot.walk:
+            walk(dir, 1)
+            verifyBattle()
+            verifySituation()
+            #verifyDeath(locaation)d
+            print("hunting!")
 
 
 def verifySituation():
     if Bot.exiting:
         exit('verifySituation')
     if Bot.location == 'route_10':
-        if Bot.battles > 10:
+        if Bot.battles > 5:
             print('HEALING!')
             moveTo('route_10_pokecenter')
             healPokecenter()
@@ -163,25 +161,45 @@ def verifySituation():
         if Bot.battles > 5:
             print('HEALING!')
             walk('d',4)
-            nurseTalk()
+            nurseTalk(2)
+            Bot.battles = 0
+            Bot.loops = Bot.loops + 1
+            print('Looping!!')
+    if Bot.location == 'cinnabar':
+        if Bot.battles > 5:
+            print('HEALING!')
+            moveTo('cinnabar_pokecenter')
+            healPokecenter('cinnabar')
+            moveTo('cinnabar_mansion')
             Bot.battles = 0
             Bot.loops = Bot.loops + 1
             print('Looping!!')
 
 
-def nurseTalk():
+def nurseTalk(spaces):
     pyautogui.typewrite('       11111111', 0.3)
     sleep(2)
-    pyautogui.typewrite(' ')
-    sleep(2)
-    pyautogui.typewrite(' ')
+    for i in range(0, spaces):
+        pyautogui.typewrite(' ')
+        sleep(2)
 
-def healPokecenter():
-    sleep(3)
-    walk('w', 8)
-    nurseTalk()
-    walk('s', 8)
-    sleep(3)
+
+def healPokecenter(pokecenter='default'):
+    if pokecenter == 'cinnabar':
+        sleep(3)
+        walk('w', 4)
+        walk('a', 4)
+        walk('w', 3)
+        nurseTalk(3)
+        walk('s', 7)
+        walk('d', 4)
+        sleep(3)
+    else:
+        sleep(3)
+        walk('w', 8)
+        nurseTalk(3)
+        walk('s', 8)
+        sleep(3)
 
 def moveTo(m):
     if m == 'route_10':
@@ -192,6 +210,27 @@ def moveTo(m):
         walk("d", 15)
         walk("a", 6)
         walk("w", 4)
+    elif m == 'cinnabar_pokecenter':
+        walk("a", 3)
+        walk("s", 1)
+        walk("d", 3)
+        sleep(2)
+        walk("s", 2)
+        walk("a", 2)
+        walk("s", 5)
+        walk("s", 6)
+        walk("d", 4)
+        walk("w", 3)
+        sleep(2)
+    elif m == 'cinnabar_mansion':
+        walk("s", 1)
+        walk("a", 4)
+        walk("w", 8)
+        walk("d", 3)
+        walk("w", 6)
+        walk("d", 3)
+        walk("a", 1)
+        walk("w", 2)
 
 
 
@@ -236,9 +275,11 @@ def timePrinter():
 #             pyautogui.press("space")
 
 def main():
+    Bot.walk = 'ad'
     Bot.command = 'fight_1'
     #Bot.command = 'catch'
-    Bot.location ='pokemon_tower'
+    Bot.location = 'cinnabar'
+    #Bot.location ='pokemon_tower'
 
     t = []
     t.append(threading.Thread(target=keyboardListener, args=()))
