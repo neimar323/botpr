@@ -94,12 +94,24 @@ def getMousePosition():
 #         print('POKEMON VIVO')
 #     return isAlive
 
+def verifyBattleStuck():
+    sleep(0.5)
+    img = imagesearch(Bot.imageFolder + 'fight.png', precision=0.8)
+    if img is None:
+        return
+
+    #vish
+    imgClick(Bot.imageFolder + 'pokemon.png', 1, 1)
+    pyautogui.typewrite('23456',0.4)
+
+
 def battle(verifySituationCommand):
     while True:
         if imgClick(Bot.imageFolder + 'fight.png', 1, 1):
             sleep(0.4)
             if '1' in verifySituationCommand:
                 skill('1')
+            verifyBattleStuck()
             sleep(2)
         img = imagesearch(Bot.imageFolder+'battleFound.png', precision=0.8)
         if img is None:
@@ -141,9 +153,16 @@ def hunt():
             walk(dir, 1)
             verifyBattle()
             verifySituation()
+            verifyLearnMove()
             #verifyDeath(locaation)d
             print("hunting!")
 
+def verifyLearnMove():
+    img = imagesearch(Bot.imageFolder + 'doNotLearn.png', precision=0.8)
+    if img is not None:
+        imgClick(Bot.imageFolder + 'doNotLearn.png', 1, 3, precision=0.8)
+        sleep(1)
+        imgClick(Bot.imageFolder + 'yes.png', 1, 3, precision=0.8)
 
 def verifySituation():
     if Bot.exiting:
