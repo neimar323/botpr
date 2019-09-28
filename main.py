@@ -30,6 +30,7 @@ class Bot:
     location = None
     exiting = False
     loops = 0
+    command =''
 
 def eventEmpty():
     return Bot.eventEmptyFlag
@@ -103,40 +104,43 @@ def battle(verifySituationCommand):
         if img is None:
             Bot.battles = Bot.battles + 1
             print('battles: '+str(Bot.battles))
+            Bot.thingsOK = True
             return
 
 def verifyBattle():
     img = imagesearch(Bot.imageFolder+'battleFound.png', precision=0.8)
     if img is not None:
-        Bot.thingsOK = True
         print("battleFound!")
         sleep(1)
         img = imagesearch_numLoop(Bot.imageFolder + 'fight.png', 1, 5, precision=0.8)
         if img is not None:
-            verifySituationCommand = verifyBattleSituation()
-            if 'fight' in verifySituationCommand:
-                battle(verifySituationCommand)
+            if 'fight' in Bot.command:
+                battle(Bot.command)
+            if 'catch' in Bot.command:
+                catch()
 
-def verifyBattleSituation():
-    # img = imagesearch(Bot.imageFolder + 'spearrow.png', precision=0.95)
-    # if img is not None:
-    #     return 'fight'
-    # else:
-    #     print('ACHEI ALGO')
-    #     catchPokemon()
-    return 'fight_1'
 
-# def run():
-#     imgClick(Bot.imageFolder + 'run.png', 1, 5)
-#     sleep(2)
+def catch():
+    img = imagesearch(Bot.imageFolder + 'abra.png', precision=0.8)
+    if img is not None:
+        sleep(9999999)
+    img = imagesearch(Bot.imageFolder + 'dito.png', precision=0.8)
+    if img is not None:
+        sleep(9999999)
+
+    run()
+
+def run():
+    imgClick(Bot.imageFolder + 'run.png', 1, 5)
+    sleep(2)
 
 def hunt():
     while(True):
-        walk("a", 7)
+        walk("a", 1)
         verifyBattle()
         verifySituation()
         #verifyDeath(locaation)d
-        walk("d", 7)
+        walk("d", 1)
         verifyBattle()
         verifySituation()
         #verifyDeath(location)
@@ -155,15 +159,27 @@ def verifySituation():
             Bot.battles = 0
             Bot.loops = Bot.loops + 1
             print('Looping!!')
+    elif Bot.location == 'pokemon_tower':
+        if Bot.battles > 5:
+            print('HEALING!')
+            walk('d',4)
+            nurseTalk()
+            Bot.battles = 0
+            Bot.loops = Bot.loops + 1
+            print('Looping!!')
+
+
+def nurseTalk():
+    pyautogui.typewrite('       11111111', 0.3)
+    sleep(2)
+    pyautogui.typewrite(' ')
+    sleep(2)
+    pyautogui.typewrite(' ')
 
 def healPokecenter():
     sleep(3)
     walk('w', 8)
-    pyautogui.typewrite('       11111111', 0.3)
-    sleep(2)
-    pyautogui.typewrite(' ', 0.5)
-    sleep(1)
-    pyautogui.typewrite('  ', 1)
+    nurseTalk()
     walk('s', 8)
     sleep(3)
 
@@ -199,7 +215,7 @@ def moveTo(m):
 def exitOnError():
     while True:
         Bot.thingsOK = False
-        sleep(120)
+        sleep(300)
         if not Bot.thingsOK:
             print("EXITING BY INACTIVITY")
             exit('exitOnError')
@@ -220,8 +236,9 @@ def timePrinter():
 #             pyautogui.press("space")
 
 def main():
-    Bot.command = 'battle'
-    Bot.location ='route_10'
+    #Bot.command = 'fight_1'
+    Bot.command = 'catch'
+    Bot.location ='pokemon_tower'
 
     t = []
     t.append(threading.Thread(target=keyboardListener, args=()))
