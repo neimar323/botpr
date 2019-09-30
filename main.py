@@ -43,9 +43,9 @@ class Bot:
 
 def walk(key, times=1):
     if times == 1:
-        pyautogui.typewrite(key)
+        hold(key, times * 0.01)
     else:
-        hold(key, times * 0.225)
+        hold(key, times * 0.215)
 
 def skill(key):
     pyautogui.press(str(key))
@@ -99,7 +99,7 @@ def getMousePosition():
 #         print('POKEMON VIVO')
 #     return isAlive
 
-def verifyBattleStuck():
+def  verifyBattleStuck():
     if not Bot.state['inBattle']:
         return
     if not Bot.state['fightAvaliable']:
@@ -126,16 +126,22 @@ def battle():
             return
         x = 1
         while True:
+            if Bot.exiting:
+                exit('battle')
+                return
+            trySkill = False
             if not Bot.state['inBattle']:
                 break
-            waitBattleMoves()
-            if imgClick(Bot.imageFolder + 'fight.png', 1, 1):
-                sleep(0.6)
-                skill(x)
+            if Bot.state['fightAvaliable']:
+                if imgClick(Bot.imageFolder + 'fight.png', 1, 1):
+                    sleep(0.6)
+                    skill(x)
+                    trySkill = True
             if not Bot.state['inBattle']:
                 break
+            if trySkill:
+                 verifyBattleStuck()
 
-        verifyBattleStuck()
         if not Bot.state['inBattle']:
             Bot.battles = Bot.battles + 1
             print('battles: '+str(Bot.battles))
@@ -150,7 +156,7 @@ def verifyBattle():
             sleep(1)
             if Bot.state['fightAvaliable']:
                 if 'fight' in Bot.command:
-                    battle()
+                     battle()
                 if 'catch' in Bot.command:
                     catch()
                 return
@@ -214,13 +220,24 @@ def huntLoop(pokecenterRoute, pokecenterAlgoritm, hunterRoute, bycicle=True):
 def verifySituation():
     if Bot.exiting:
         exit('verifySituation')
+    if Bot.battles <= Bot.battlesBeforePokecenter:
+        return
+    print('STARTING LOOPING!')
+    i = 0
+    while i < 4:
+        if Bot.state['inBattle'] or Bot.state['learnMove'] or Bot.state['evolving']:
+            print('LOOPING ABORTED')
+            return
+        sleep(1)
+        i = i + 1
+
     if Bot.location == 'route_10':
         huntLoop('route_10_pokecenter', 'default', 'route_10')
     elif Bot.location == 'pokemon_tower':
         #i need to refactor thisss
-        if Bot.battles > Bot.battlesBeforePokecenter:
             print('HEALING!')
-            walk('d',4)
+            walk('d',2)
+            walk('d', 2)
             nurseTalk(2)
             Bot.battles = 0
             Bot.loops = Bot.loops + 1
@@ -231,19 +248,21 @@ def verifySituation():
         huntLoop('indigo_pokecenter', 'indigo_pokecenter', 'victory_r')
 
 
-def nurseTalk(spaces=3):
+def nurseTalk():
     i = 0
     while not imgClick(Bot.imageFolder + 'yesPlease.png', 1, 1):
         i = i + 1
         pyautogui.typewrite(' ')
         sleep(0.5)
-        if i > 10:
+        if i > 5:
             return
     sleep(2)
-    for i in range(0, spaces):
+    for i in range(0, 3):
         pyautogui.typewrite(' ')
         sleep(2)
-
+        messageWindow = imagesearch(Bot.imageFolder + 'messageWindow.png', precision=0.8)
+        if messageWindow is None:
+            return
 
 def healPokecenter(pokecenter='default'):
     if pokecenter == 'cinnabar_pokecenter':
@@ -302,11 +321,16 @@ def moveTo(m):
         walk("w", 2)
     elif m == 'victory_r':
         walk("s", 4)
-        walk("a", 12)
-        walk("s", 19)
+        walk("a", 11)
+        walk("s", 10)
+        walk("d", 4)
+        walk("s", 6)
+        walk("a", 1)
+        walk("s", 1)
         sleep(2)
         walk("a", 1)
-        walk("s", 2)
+        walk("s", 1)
+
     elif m == 'indigo_pokecenter':
         walk("d", 3)
         walk("a", 1)
@@ -382,14 +406,14 @@ def state():
         sleep(0.3)
 
 def main():
-    Bot.walk = 'aadd'
+    Bot.walk = 'ad'
     Bot.command = 'fight'
     #Bot.command = 'catch'
     #Bot.location ='route_10'
-    Bot.location ='pokemon_tower'
+    #adadadBot.location ='pokemon_tower'
     #Bot.location = 'cinnabar'
-    #Bot.location = 'victory_r'
-    Bot.battlesBeforePokecenter = 1
+    Bot.location = 'victory_r'
+    Bot.battlesBeforePokecenter = 3
 
     t = []
     t.append(threading.Thread(target=keyboardListener, args=()))
@@ -399,6 +423,7 @@ def main():
     t.append(threading.Thread(target=state, args=()))
 
     sleep(1)
+
 
     for oneT in t:
         oneT.start()
