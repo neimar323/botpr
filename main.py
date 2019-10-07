@@ -295,7 +295,7 @@ def moveTo(m):
     elif m == 'route_10_pokecenter':
         #tem q pensar em melhorar essa gambi
         walk("w", 4)
-        walk("d", 15)
+        walk("d", 17)
         walk("a", 6)
         walk("w", 4)
     elif m == 'cinnabar_pokecenter':
@@ -305,8 +305,7 @@ def moveTo(m):
         sleep(2)
         walk("s", 2)
         walk("a", 2)
-        walk("s", 5)
-        walk("s", 6)
+        walk("s", 13)
         walk("d", 4)
         walk("w", 3)
         sleep(2)
@@ -406,14 +405,14 @@ def state():
         sleep(0.3)
 
 def main():
-    Bot.walk = 'ad'
+    Bot.walk = 'aaaadddd'
     Bot.command = 'fight'
     #Bot.command = 'catch'
-    #Bot.location ='route_10'
+    Bot.location ='route_10'
     #adadadBot.location ='pokemon_tower'
     #Bot.location = 'cinnabar'
-    Bot.location = 'victory_r'
-    Bot.battlesBeforePokecenter = 3
+    #Bot.location = 'victory_r'
+    Bot.battlesBeforePokecenter = 0
 
     t = []
     t.append(threading.Thread(target=keyboardListener, args=()))
