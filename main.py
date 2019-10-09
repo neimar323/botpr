@@ -6,6 +6,7 @@ from pynput import keyboard as keyboardL
 import sys
 from datetime import datetime
 import os
+import copy
 
 
 class Bot:
@@ -32,13 +33,15 @@ class Bot:
     command = ''
     walk = 'ad'
     battlesBeforePokecenter = 1
+    escapeRope = False
     state = {
         'inBattle': False,
         'evolving': False,
         'learnMove': False,
-        'fightAvaliable': False
+        'fightAvaliable': False,
+        'loading': False
     }
-
+    loadOcurred = False
 
 
 def walk(key, times=1):
@@ -242,10 +245,14 @@ def verifySituation():
             Bot.battles = 0
             Bot.loops = Bot.loops + 1
             print('Looping!!')
-    if Bot.location == 'cinnabar':
+    elif Bot.location == 'cinnabar':
         huntLoop('cinnabar_pokecenter', 'cinnabar_pokecenter', 'cinnabar_mansion')
-    if Bot.location == 'victory_r':
+    elif Bot.location == 'victory_r':
         huntLoop('indigo_pokecenter', 'indigo_pokecenter', 'victory_r')
+    elif Bot.location == 'mt_silver_exterior':
+        huntLoop('relog', 'default', 'mt_silver_exterior')
+    elif Bot.location == 'mt_silver':
+        huntLoop('relog', 'default', 'mt_silver')
 
 
 def nurseTalk():
@@ -265,31 +272,31 @@ def nurseTalk():
             return
 
 def healPokecenter(pokecenter='default'):
-    if pokecenter == 'cinnabar_pokecenter':
-        sleep(3)
+    waitLoading(False)
+    if Bot.escapeRope and pokecenter=='default':
+        Bot.escapeRope = False
+        walk('s', 4)
+    elif pokecenter == 'cinnabar_pokecenter':
         walk('w', 4)
         walk('a', 4)
         walk('w', 3)
         nurseTalk()
         walk('s', 7)
         walk('d', 4)
-        sleep(3)
     elif pokecenter == 'indigo_pokecenter':
-        sleep(3)
         walk('a', 6)
         walk('w', 5)
         nurseTalk()
         walk('d', 6)
         walk('s', 6)
-        sleep(3)
     else:
-        sleep(3)
         walk('w', 8)
         nurseTalk()
         walk('s', 8)
-        sleep(3)
+    waitLoading()
 
 def moveTo(m):
+    waitLoading(False)
     if m == 'route_10':
         walk("s", 10)
     elif m == 'route_10_pokecenter':
@@ -302,13 +309,13 @@ def moveTo(m):
         walk("a", 3)
         walk("s", 1)
         walk("d", 3)
-        sleep(2)
+        waitLoading()
         walk("s", 2)
         walk("a", 2)
         walk("s", 13)
         walk("d", 4)
         walk("w", 3)
-        sleep(2)
+        waitLoading()
     elif m == 'cinnabar_mansion':
         walk("s", 1)
         walk("a", 4)
@@ -318,6 +325,7 @@ def moveTo(m):
         walk("d", 3)
         walk("a", 1)
         walk("w", 2)
+        waitLoading()
     elif m == 'victory_r':
         walk("s", 4)
         walk("a", 11)
@@ -326,19 +334,37 @@ def moveTo(m):
         walk("s", 6)
         walk("a", 1)
         walk("s", 1)
-        sleep(2)
+        waitLoading()
         walk("a", 1)
         walk("s", 1)
-
     elif m == 'indigo_pokecenter':
         walk("d", 3)
         walk("a", 1)
         walk("w", 2)
-        sleep(2)
+        waitLoading()
         walk("w", 16)
         walk("d", 12)
         walk("w", 4)
-
+    elif m == 'mt_silver_exterior':
+        walk("s", 1)
+        walk("a", 4)
+    elif m == 'mt_silver':
+        walk("s", 1)
+        walk("a", 10)
+        walk("w", 10)
+        waitLoading()
+    elif m == 'relog':
+        while True:
+            for dir in Bot.walk:
+                walk(dir, 1)
+                if Bot.state['inBattle']:
+                    pyautogui.press('esc')
+                    imgClick(Bot.imageFolder + 'logOut.png', 1, 3)
+                    sleep(3)
+                    imgClick(Bot.imageFolder + 'loginGold.png', 1, 3)
+                    Bot.escapeRope = True
+                    waitLoading()
+                    return
 
 
 # def verifyDeath(moveToLocation):
@@ -375,44 +401,68 @@ def timePrinter():
         if Bot.exiting:
             exit('timePrinter')
 
-# def fishing():
-#     while True:
-#         pos = imagesearch_numLoop(Bot.imageFolder + 'fishing.png', 0.01, 10, 0.91, False)
-#         if pos is not None:
-#             pyautogui.press("space")
+def waitLoading(verifyLoadingScreen=True):
+    #found loading screen in the near past
+    ok = True
+    if verifyLoadingScreen:
+        ok = isLoaded()
+    if ok:
+        pos = imagesearch_numLoop(Bot.imageFolder + 'menu.png', 1, 15, 0.8)
+        if pos is None: #if None something very wrong
+            exit('waitLoading - Error 1')
+        sleep(0.2)
+        return
+    else:
+        exit('waitLoading - Error 2')
+
+def isLoaded():
+    i = 0
+    print('is loaded STARTED')
+    while True:
+        i = i + 1
+        if Bot.loadOcurred:
+            Bot.loadOcurred = False
+            return True
+        sleep(1)
+        if i > 6:
+            return False
+    return False
 
 def state():
     while True:
         if Bot.exiting:
             exit('state')
 
-        battleFound = imagesearch(Bot.imageFolder + 'battleFound.png', precision=0.8)
+        loading1 = imagesearch(Bot.imageFolder + 'loading.png', precision=0.8, save=False)
+        battleFound = imagesearch(Bot.imageFolder + 'battleFound.png', precision=0.8, save=False)
         Bot.state['inBattle'] = (battleFound is not None)
         if Bot.state['inBattle']:
             Bot.state['evolving'] = False
-            fight = imagesearch(Bot.imageFolder + 'fight.png', precision=0.8)
+            fight = imagesearch(Bot.imageFolder + 'fight.png', precision=0.8, save=False)
             Bot.state['fightAvaliable'] = (fight is not None)
             Bot.state['learnMove'] = False
-
         else:
-            evolving = imagesearch(Bot.imageFolder + 'evolving.png', precision=0.8)
+            evolving = imagesearch(Bot.imageFolder + 'evolving.png', precision=0.8, save=False)
             Bot.state['evolving'] = (evolving is not None)
-            doNotLearn = imagesearch(Bot.imageFolder + 'doNotLearn.png', precision=0.8)
+            doNotLearn = imagesearch(Bot.imageFolder + 'doNotLearn.png', precision=0.8, save=False)
             Bot.state['learnMove'] = (doNotLearn is not None)
             Bot.state['fightAvaliable'] = False
-
+        loading2 = imagesearch(Bot.imageFolder + 'loading.png', precision=0.8, save=False)
+        Bot.state['loading'] = (loading1 is not None or loading2 is not None)
+        if Bot.state['loading']:
+            Bot.loadOcurred = True
         print(Bot.state)
-        sleep(0.3)
+        sleep(0.2)
 
 def main():
-    Bot.walk = 'aaaadddd'
+    Bot.walk = 'ad'
     Bot.command = 'fight'
     #Bot.command = 'catch'
-    Bot.location ='route_10'
-    #adadadBot.location ='pokemon_tower'
+    Bot.location ='mt_silver'
+    #Bot.location ='pokemon_tower'
     #Bot.location = 'cinnabar'
     #Bot.location = 'victory_r'
-    Bot.battlesBeforePokecenter = 0
+    Bot.battlesBeforePokecenter = 4
 
     t = []
     t.append(threading.Thread(target=keyboardListener, args=()))
