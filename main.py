@@ -241,7 +241,7 @@ def verifySituation():
             print('HEALING!')
             walk('d',2)
             walk('d', 2)
-            nurseTalk(2)
+            nurseTalk()
             Bot.battles = 0
             Bot.loops = Bot.loops + 1
             print('Looping!!')
@@ -273,7 +273,8 @@ def nurseTalk():
 
 def healPokecenter(pokecenter='default'):
     waitLoading(False)
-    if Bot.escapeRope and pokecenter=='default':
+    sleep(1)
+    if Bot.escapeRope and pokecenter == 'default':
         Bot.escapeRope = False
         walk('s', 4)
     elif pokecenter == 'cinnabar_pokecenter':
@@ -328,12 +329,11 @@ def moveTo(m):
         waitLoading()
     elif m == 'victory_r':
         walk("s", 4)
-        walk("a", 11)
+        walk("a", 10)
         walk("s", 10)
-        walk("d", 4)
+        walk("d", 2)
+        walk("a", 1.5)
         walk("s", 6)
-        walk("a", 1)
-        walk("s", 1)
         waitLoading()
         walk("a", 1)
         walk("s", 1)
@@ -343,7 +343,7 @@ def moveTo(m):
         walk("w", 2)
         waitLoading()
         walk("w", 16)
-        walk("d", 12)
+        walk("d", 12.2)
         walk("w", 4)
     elif m == 'mt_silver_exterior':
         walk("s", 1)
@@ -458,11 +458,11 @@ def main():
     Bot.walk = 'ad'
     Bot.command = 'fight'
     #Bot.command = 'catch'
-    Bot.location ='mt_silver'
-    #Bot.location ='pokemon_tower'
+    #Bot.location ='mt_silver'
+    Bot.location ='pokemon_tower'
     #Bot.location = 'cinnabar'
     #Bot.location = 'victory_r'
-    Bot.battlesBeforePokecenter = 4
+    Bot.battlesBeforePokecenter = 3
 
     t = []
     t.append(threading.Thread(target=keyboardListener, args=()))
@@ -472,7 +472,6 @@ def main():
     t.append(threading.Thread(target=state, args=()))
 
     sleep(1)
-
 
     for oneT in t:
         oneT.start()
