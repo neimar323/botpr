@@ -29,6 +29,7 @@ class Bot:
     battles = 0
     location = None
     exiting = False
+    stop = False
     loops = 0
     command = ''
     walk = 'ad'
@@ -42,23 +43,24 @@ class Bot:
         'loading': False
     }
     loadOcurred = False
-
+    threads = [] #threads
 
 def walk(key, times=1):
     if times == 1:
-        hold(key, times * 0.01)
+        hold(key, times * 0.04)
     else:
-        hold(key, times * 0.215)
+        hold(key, times * 0.2)
 
 def skill(key):
     pyautogui.press(str(key))
 
-def hold(key, holdTime=0.25):
+def hold(key, holdTime):
     pyautogui.keyDown(key)
     sleep(holdTime)
     pyautogui.keyUp(key)
 
 def on_press(key):
+    verifyExiting('on_press')
     try:
         k = key.char
         print('alphanumeric key {0} pressed'.format(key.char))
@@ -68,7 +70,8 @@ def on_press(key):
     if k == 'p':
         im = pyautogui.screenshot()
         im.save('exit.png')
-        exit('on_press')
+        Bot.exiting = True
+        verifyExiting('on_press')
     if k =='m':
         getMousePosition()
 
@@ -79,14 +82,17 @@ def keyboardListener():
             listener.join()
             listener.start()
     except:
-        exit('keyboardListener')
+        Bot.exiting = True
+        verifyExiting('keyboardListener')
 
 
-def exit(called):
-    Bot.exiting = True
-    print(called+' exiting!!!!!!!!!')
-    sys.exit()
-
+def verifyExiting(called, canStop=True):
+    if Bot.exiting:
+        print(called+' exiting!!!!!!!!!')
+        sys.exit()
+    if Bot.stop and canStop:
+        sleep(60)
+        Bot.stop = False
 
 def getMousePosition():
     Bot.mouseX, Bot.mouseY = pyautogui.position()
@@ -115,8 +121,7 @@ def  verifyBattleStuck():
 def waitBattleMoves():
     i = 0
     while i < 6:
-        if Bot.exiting:
-            exit('waitBattleMoves')
+        verifyExiting('waitBattleMoves')
         if Bot.state['fightAvaliable']:
             return
         sleep(1)
@@ -124,21 +129,17 @@ def waitBattleMoves():
 
 def battle():
     while True:
-        if Bot.exiting:
-            exit('battle')
-            return
-        x = 1
+        verifyExiting('battle')
         while True:
-            if Bot.exiting:
-                exit('battle')
-                return
+            verifyExiting('battle')
+
             trySkill = False
             if not Bot.state['inBattle']:
                 break
             if Bot.state['fightAvaliable']:
                 if imgClick(Bot.imageFolder + 'fight.png', 1, 1):
                     sleep(0.6)
-                    skill(x)
+                    skill(1)
                     trySkill = True
             if not Bot.state['inBattle']:
                 break
@@ -167,7 +168,7 @@ def verifyBattle():
                 i = i + 1
 
 def catch():
-    img = imagesearch(Bot.imageFolder + 'abra.png', precision=0.9)
+    img = imagesearch(Bot.imageFolder + 'marill.png', precision=0.9)
     if img is None:
         img = imagesearch(Bot.imageFolder + 'ditto.png', precision=0.9)
     if img is not None:
@@ -209,10 +210,13 @@ def bicycleClick():
 def huntLoop(pokecenterRoute, pokecenterAlgoritm, hunterRoute, bycicle=True):
     if Bot.battles > Bot.battlesBeforePokecenter:
         print('HEALING!')
-        if bycicle:
+        if bycicle and pokecenterRoute != 'relog':
             bicycleClick()
+        print('huntLoop moveTo '+pokecenterRoute)
         moveTo(pokecenterRoute)
+        print('huntLoop healPokecenter '+pokecenterAlgoritm)
         healPokecenter(pokecenterAlgoritm)
+        print('huntLoop hunterRoute '+hunterRoute)
         moveTo(hunterRoute)
         Bot.battles = 0
         Bot.loops = Bot.loops + 1
@@ -221,8 +225,8 @@ def huntLoop(pokecenterRoute, pokecenterAlgoritm, hunterRoute, bycicle=True):
             bicycleClick()
 
 def verifySituation():
-    if Bot.exiting:
-        exit('verifySituation')
+    verifyExiting('verifySituation')
+
     if Bot.battles <= Bot.battlesBeforePokecenter:
         return
     print('STARTING LOOPING!')
@@ -239,7 +243,7 @@ def verifySituation():
     elif Bot.location == 'pokemon_tower':
         #i need to refactor thisss
             print('HEALING!')
-            walk('d',2)
+            walk('d', 2)
             walk('d', 2)
             nurseTalk()
             Bot.battles = 0
@@ -248,11 +252,29 @@ def verifySituation():
     elif Bot.location == 'cinnabar':
         huntLoop('cinnabar_pokecenter', 'cinnabar_pokecenter', 'cinnabar_mansion')
     elif Bot.location == 'victory_r':
-        huntLoop('indigo_pokecenter', 'indigo_pokecenter', 'victory_r')
+        huntLoop('relog', 'indigo_pokecenter', 'victory_r')
     elif Bot.location == 'mt_silver_exterior':
         huntLoop('relog', 'default', 'mt_silver_exterior')
     elif Bot.location == 'mt_silver':
         huntLoop('relog', 'default', 'mt_silver')
+    elif Bot.location == '117':
+        huntLoop('relog', 'default', '117')
+    elif Bot.location == '119a':
+        huntLoop('relog', 'default', '119a')
+    elif Bot.location == '121':
+        huntLoop('relog', 'default', '121', False)
+
+def restart():
+    Bot.escapeRope = True
+    if Bot.location == 'route_10':
+        healPokecenter('default')
+    #elif Bot.location == 'pokemon_tower':
+    #elif Bot.location == 'cinnabar':
+    elif Bot.location == 'victory_r':
+        walk('s', 5)
+        healPokecenter('indigo_pokecenter')
+    else:
+        healPokecenter('default')
 
 
 def nurseTalk():
@@ -276,7 +298,11 @@ def healPokecenter(pokecenter='default'):
     sleep(1)
     if Bot.escapeRope and pokecenter == 'default':
         Bot.escapeRope = False
-        walk('s', 4)
+        walk('s', 6)
+    elif Bot.escapeRope and pokecenter == 'indigo_pokecenter':
+        Bot.escapeRope = False
+        walk('s', 10)
+        walk('d', 1)
     elif pokecenter == 'cinnabar_pokecenter':
         walk('w', 4)
         walk('a', 4)
@@ -291,9 +317,9 @@ def healPokecenter(pokecenter='default'):
         walk('d', 6)
         walk('s', 6)
     else:
-        walk('w', 8)
+        walk('w', 6)
         nurseTalk()
-        walk('s', 8)
+        walk('s', 6)
     waitLoading()
 
 def moveTo(m):
@@ -328,12 +354,9 @@ def moveTo(m):
         walk("w", 2)
         waitLoading()
     elif m == 'victory_r':
-        walk("s", 4)
-        walk("a", 10)
-        walk("s", 10)
-        walk("d", 2)
-        walk("a", 1.5)
-        walk("s", 6)
+        walk("s", 5)
+        walk("a", 23)
+        walk("s", 30)
         waitLoading()
         walk("a", 1)
         walk("s", 1)
@@ -353,6 +376,31 @@ def moveTo(m):
         walk("a", 10)
         walk("w", 10)
         waitLoading()
+    elif m == '117':
+        walk("s", 3)
+        walk("d", 10)
+        waitLoading()
+        walk("d", 1)
+        walk("s", 2.5)
+        walk("d", 9)
+        walk("s", 5)
+    elif m == '119a':
+        walk("s", 3)
+        walk("a", 10)
+        waitLoading()
+        walk("a", 30)
+        walk("s", 2)
+        Bot.walk = 'aad'
+    elif m == '121':
+        walk("s", 1)
+        bicycleClick()
+        walk("a", 17)
+        waitLoading()
+        walk("a", 3)
+        walk("s", 6)
+        walk("a", 3)
+        walk("s", 4)
+        Bot.walk = 'aaadd'
     elif m == 'relog':
         while True:
             for dir in Bot.walk:
@@ -384,22 +432,12 @@ def moveTo(m):
 #     if not ret:
 #         return False
 
-def exitOnError():
-    while True:
-        Bot.thingsOK = False
-        sleep(300)
-        if not Bot.thingsOK:
-            print("EXITING BY INACTIVITY")
-            exit('exitOnError')
-        elif Bot.exiting:
-            exit('exitOnError')
 
 def timePrinter():
     while True:
         print(datetime.now())
         sleep(1)
-        if Bot.exiting:
-            exit('timePrinter')
+        verifyExiting('timePrinter')
 
 def waitLoading(verifyLoadingScreen=True):
     #found loading screen in the near past
@@ -409,11 +447,13 @@ def waitLoading(verifyLoadingScreen=True):
     if ok:
         pos = imagesearch_numLoop(Bot.imageFolder + 'menu.png', 1, 15, 0.8)
         if pos is None: #if None something very wrong
-            exit('waitLoading - Error 1')
-        sleep(0.2)
+            Bot.exiting = True
+            verifyExiting('waitLoading - Error 1')
+        sleep(1)
         return
     else:
-        exit('waitLoading - Error 2')
+        Bot.exiting = True
+        verifyExiting('waitLoading - Error 2')
 
 def isLoaded():
     i = 0
@@ -430,8 +470,7 @@ def isLoaded():
 
 def state():
     while True:
-        if Bot.exiting:
-            exit('state')
+        verifyExiting('state', False)
 
         loading1 = imagesearch(Bot.imageFolder + 'loading.png', precision=0.8, save=False)
         battleFound = imagesearch(Bot.imageFolder + 'battleFound.png', precision=0.8, save=False)
@@ -452,28 +491,49 @@ def state():
         if Bot.state['loading']:
             Bot.loadOcurred = True
         print(Bot.state)
-        sleep(0.2)
+        sleep(0.1)
+
+def restartOnFailure():
+    while True:
+        Bot.thingsOK = False
+        sleep(300)
+        if Bot.loops > 0 and not Bot.thingsOK:
+            imgClick(Bot.imageFolder + 'loginGold.png', 1, 1)
+            Bot.stop = True
+            imgClick(Bot.imageFolder + 'escapeRope.png', 1, 4)
+            #reseting
+            Bot.battles = 0
+            Bot.loops = 0
+            waitLoading(False)
+            restart()
+            moveTo(Bot.location)
+
+        elif not Bot.thingsOK and Bot.loops == 0:
+            Bot.exiting = True
+            verifyExiting('restartOnFailure')
 
 def main():
     Bot.walk = 'ad'
     Bot.command = 'fight'
     #Bot.command = 'catch'
     #Bot.location ='mt_silver'
-    Bot.location ='pokemon_tower'
+    #Bot.location ='pokemon_tower'
     #Bot.location = 'cinnabar'
-    #Bot.location = 'victory_r'
-    Bot.battlesBeforePokecenter = 3
+    #Bot.location = 'victory_r'a
+    #Bot.location = '117'
+    #Bot.location = '119a'
+    Bot.location = '121'
+    Bot.battlesBeforePokecenter = 5
 
-    t = []
-    t.append(threading.Thread(target=keyboardListener, args=()))
-    t.append(threading.Thread(target=hunt, args=()))
-    t.append(threading.Thread(target=exitOnError, args=()))
-    t.append(threading.Thread(target=timePrinter, args=()))
-    t.append(threading.Thread(target=state, args=()))
 
-    sleep(1)
 
-    for oneT in t:
+    Bot.threads.append(threading.Thread(target=keyboardListener, args=()))
+    Bot.threads.append(threading.Thread(target=hunt, args=()))
+    Bot.threads.append(threading.Thread(target=timePrinter, args=()))
+    Bot.threads.append(threading.Thread(target=state, args=()))
+    Bot.threads.append(threading.Thread(target=restartOnFailure, args=()))
+
+    for oneT in Bot.threads:
         oneT.start()
 
 #MAIN
