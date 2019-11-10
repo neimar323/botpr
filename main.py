@@ -159,6 +159,7 @@ def pokemonNotCatch():
     y1 = posBatle[1] + 20
     x2 = x1+100
     y2 = y1+100
+    sleep(1)
     img = imagesearcharea(Bot.imageFolder + 'captured.png', x1, y1, x2, y2, precision=0.7)
     if img is None:
         print('POKEMON FOUND')
@@ -183,7 +184,6 @@ def verifyBattle():
                 i = i + 1
 
 def catch():
-    sleep(0.4)
     pokemonNotCatch()
     # img = imagesearch(Bot.imageFolder + 'sableye.png', precision=0.9)
     #img = imagesearch(Bot.imageFolder + 'marill.png', precision=0.9)
