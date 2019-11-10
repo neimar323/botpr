@@ -42,11 +42,10 @@ returns :
 the top left corner coordinates of the element if found as an array [x,y] or [-1,-1] if not
 
 '''
-def imagesearcharea(image, x1,y1,x2,y2, precision=0.8, im=None) :
-    if im is None :
+def imagesearcharea(image, x1,y1,x2,y2, precision=0.8, im=None):
+    if im is None:
         im = region_grabber(region=(x1, y1, x2, y2))
         im.save('testarea.png') #usefull for debugging purposes, this will save the captured region as "testarea.png"
-        x = 1
     img_rgb = np.array(im)
     img_gray = cv2.cvtColor(img_rgb, cv2.COLOR_BGR2GRAY)
     template = cv2.imread(image, 0)
@@ -176,7 +175,7 @@ the top left corner coordinates of the element as an array [x,y]
 def imagesearch_region_loop(image, timesample, x1, y1, x2, y2, precision=0.8):
     pos = imagesearcharea(image, x1,y1,x2,y2, precision)
 
-    while pos[0] == -1:
+    while pos is None:
         time.sleep(timesample)
         pos = imagesearcharea(image, x1, y1, x2, y2, precision)
     return pos

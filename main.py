@@ -152,9 +152,24 @@ def battle():
             Bot.thingsOK = True
             return
 
+def pokemonNotCatch():
+    #imagesearch_region_loop(image, timesample, x1, y1, x2, y2, precision=0.8):
+    posBatle = imagesearch(Bot.imageFolder + 'battleFound.png', precision=0.8, save=False)
+    x1 = posBatle[0] - 120
+    y1 = posBatle[1] + 20
+    x2 = x1+100
+    y2 = y1+100
+    img = imagesearcharea(Bot.imageFolder + 'captured.png', x1, y1, x2, y2, precision=0.7)
+    if img is None:
+        print('POKEMON FOUND')
+        sleep(9999)
+    else:
+        print('ALREADY CAPTURED POKEMON')
+
 def verifyBattle():
     if Bot.state['inBattle']:
         print("battleFound!")
+        pokemonNotCatch()
         i = 0
         while i < 3:
             sleep(1)
@@ -168,12 +183,23 @@ def verifyBattle():
                 i = i + 1
 
 def catch():
-    img = imagesearch(Bot.imageFolder + 'marill.png', precision=0.9)
-    if img is None:
-        img = imagesearch(Bot.imageFolder + 'ditto.png', precision=0.9)
-    if img is not None:
-        print('POKEMON FOUND')
-        sleep(9999)
+    sleep(0.4)
+    pokemonNotCatch()
+    # img = imagesearch(Bot.imageFolder + 'sableye.png', precision=0.9)
+    #img = imagesearch(Bot.imageFolder + 'marill.png', precision=0.9)
+    #img = imagesearch(Bot.imageFolder + 'clefairy.png', precision=0.9)
+    # img = imagesearch(Bot.imageFolder + 'pineco.png', precision=0.9)
+    # if img is None:
+    #     img = imagesearch(Bot.imageFolder + 'gible.png', precision=0.9)
+    #     if img is None:
+    #         img = imagesearch(Bot.imageFolder + 'clefable.png', precision=0.9)
+    # # if img is None:
+    # #     img = imagesearch(Bot.imageFolder + 'tyrogue.png', precision=0.9)
+    # # #elif img is None:
+    #    # img = imagesearch(Bot.imageFolder + 'ditto.png', precision=0.9)
+    # if img is not None:
+    #     print('POKEMON FOUND')
+    #     sleep(9999)
 
     run()
 
@@ -239,7 +265,7 @@ def verifySituation():
         i = i + 1
 
     if Bot.location == 'route_10':
-        huntLoop('route_10_pokecenter', 'default', 'route_10')
+        huntLoop('relog', 'default', 'route_10')
     elif Bot.location == 'pokemon_tower':
         #i need to refactor thisss
             print('HEALING!')
@@ -263,16 +289,16 @@ def verifySituation():
         huntLoop('relog', 'default', '119a')
     elif Bot.location == '121':
         huntLoop('relog', 'default', '121', False)
+    elif Bot.location == 'mossdeep':
+        huntLoop('relog', 'default', 'mossdeep', False)
 
 def restart():
     Bot.escapeRope = True
-    if Bot.location == 'route_10':
-        healPokecenter('default')
     #elif Bot.location == 'pokemon_tower':
     #elif Bot.location == 'cinnabar':
-    elif Bot.location == 'victory_r':
-        walk('s', 5)
-        healPokecenter('indigo_pokecenter')
+    if Bot.location == 'victory_r':
+        walk('s', 12)
+        walk('d', 1)
     else:
         healPokecenter('default')
 
@@ -301,7 +327,7 @@ def healPokecenter(pokecenter='default'):
         walk('s', 6)
     elif Bot.escapeRope and pokecenter == 'indigo_pokecenter':
         Bot.escapeRope = False
-        walk('s', 10)
+        walk('s', 12)
         walk('d', 1)
     elif pokecenter == 'cinnabar_pokecenter':
         walk('w', 4)
@@ -326,6 +352,7 @@ def moveTo(m):
     waitLoading(False)
     if m == 'route_10':
         walk("s", 10)
+        Bot.walk = 'aaaddd'
     elif m == 'route_10_pokecenter':
         #tem q pensar em melhorar essa gambi
         walk("w", 4)
@@ -355,7 +382,7 @@ def moveTo(m):
         waitLoading()
     elif m == 'victory_r':
         walk("s", 5)
-        walk("a", 23)
+        walk("a", 13)
         walk("s", 30)
         waitLoading()
         walk("a", 1)
@@ -401,6 +428,17 @@ def moveTo(m):
         walk("a", 3)
         walk("s", 4)
         Bot.walk = 'aaadd'
+    elif m == 'mossdeep':
+        walk("s", 4)
+        walk("a", 4)
+        bicycleClick()
+        walk("s", 17)
+        pyautogui.press('space')
+        imgClick(Bot.imageFolder + 'yes.png', 1, 1)
+        sleep(1)
+        walk("s", 3)
+        Bot.walk = 'ad'
+
     elif m == 'relog':
         while True:
             for dir in Bot.walk:
@@ -409,10 +447,16 @@ def moveTo(m):
                     pyautogui.press('esc')
                     imgClick(Bot.imageFolder + 'logOut.png', 1, 3)
                     sleep(3)
-                    imgClick(Bot.imageFolder + 'loginGold.png', 1, 3)
+                    login()
                     Bot.escapeRope = True
                     waitLoading()
                     return
+
+def login():
+    while imgClick(Bot.imageFolder + 'loginGold.png', 1, 1):
+        sleep(1)
+        pass
+
 
 
 # def verifyDeath(moveToLocation):
@@ -441,19 +485,17 @@ def timePrinter():
 
 def waitLoading(verifyLoadingScreen=True):
     #found loading screen in the near past
+    sleep(2)
     ok = True
     if verifyLoadingScreen:
         ok = isLoaded()
     if ok:
         pos = imagesearch_numLoop(Bot.imageFolder + 'menu.png', 1, 15, 0.8)
-        if pos is None: #if None something very wrong
-            Bot.exiting = True
-            verifyExiting('waitLoading - Error 1')
-        sleep(1)
+        if pos is None: #weird
+            sleep(10)#sleep and pray to be everything ok
         return
     else:
-        Bot.exiting = True
-        verifyExiting('waitLoading - Error 2')
+        sleep(10)#sleep and pray to be everything ok
 
 def isLoaded():
     i = 0
@@ -469,7 +511,9 @@ def isLoaded():
     return False
 
 def state():
+    i = 0
     while True:
+        i = i + 1
         verifyExiting('state', False)
 
         loading1 = imagesearch(Bot.imageFolder + 'loading.png', precision=0.8, save=False)
@@ -490,7 +534,8 @@ def state():
         Bot.state['loading'] = (loading1 is not None or loading2 is not None)
         if Bot.state['loading']:
             Bot.loadOcurred = True
-        print(Bot.state)
+        if i % 7 == 0:
+            print(Bot.state)
         sleep(0.1)
 
 def restartOnFailure():
@@ -498,7 +543,7 @@ def restartOnFailure():
         Bot.thingsOK = False
         sleep(300)
         if Bot.loops > 0 and not Bot.thingsOK:
-            imgClick(Bot.imageFolder + 'loginGold.png', 1, 1)
+            login()
             Bot.stop = True
             imgClick(Bot.imageFolder + 'escapeRope.png', 1, 4)
             #reseting
@@ -514,18 +559,18 @@ def restartOnFailure():
 
 def main():
     Bot.walk = 'ad'
-    Bot.command = 'fight'
-    #Bot.command = 'catch'
+    #Bot.command = 'fight'
+    Bot.command = 'catch'
+    #Bot.location = 'route_10'
     #Bot.location ='mt_silver'
     #Bot.location ='pokemon_tower'
     #Bot.location = 'cinnabar'
-    #Bot.location = 'victory_r'a
+    Bot.location = 'victory_r'
     #Bot.location = '117'
     #Bot.location = '119a'
-    Bot.location = '121'
-    Bot.battlesBeforePokecenter = 5
-
-
+    #Bot.location = '121'
+    #Bot.location = 'mossdeep'
+    Bot.battlesBeforePokecenter = 4
 
     Bot.threads.append(threading.Thread(target=keyboardListener, args=()))
     Bot.threads.append(threading.Thread(target=hunt, args=()))
